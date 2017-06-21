@@ -18,7 +18,7 @@ func Hey(s string) string {
 		response = "Whoa, chill out!"
 	}
 
-	if len(s) == 0 || len(strings.Replace(s, "\t", "", -1)) == 0 {
+	if len(s) == 0 {
 		response = "Fine. Be that way!"
 	}
 
