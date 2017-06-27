@@ -1,6 +1,10 @@
 package erratum
 
-import "io"
+import (
+	"io"
+)
+
+const testVersion = 2
 
 type TransientError struct {
 	err error
@@ -38,3 +42,34 @@ type Resource interface {
 // It may return a wrapped error of type TransientError. In this case the resource
 // is temporarily unavailable and the caller should retry soon.
 type ResourceOpener func() (Resource, error)
+type err error
+
+func Use(ro ResourceOpener, s string) (err error) {
+
+	var res Resource
+
+	for done := false; done != true; {
+		res, err = ro()
+		if _, ok := err.(TransientError); ok {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		break
+	}
+
+	defer func() {
+		defer res.Close()
+		if r := recover(); r != nil {
+			if nerr, ok := r.(FrobError); ok {
+				res.Defrob(nerr.defrobTag)
+			}
+			err = r.(error)
+		}
+	}()
+
+	res.Frob(s)
+	return err
+
+}
